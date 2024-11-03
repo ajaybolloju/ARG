@@ -27,13 +27,10 @@ extern "C" {
 #endif
 
 /* Includes ------------------------------------------------------------------*/
-#include "stm32f1xx_hal.h"
+#include "stm32f4xx_hal.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-#define RAIN_GAUGE_MCU_Pin GPIO_PIN_13
-#define RAIN_GAUGE_MCU_GPIO_Port GPIOB
-#define RAIN_GAUGE_MCU_EXTI_IRQn EXTI15_10_IRQn
 
 /* USER CODE END Includes */
 
@@ -60,6 +57,10 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define OnBoardLED_Pin GPIO_PIN_13
+#define OnBoardLED_GPIO_Port GPIOC
+#define OnBoardKey_Pin GPIO_PIN_0
+#define OnBoardKey_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 
