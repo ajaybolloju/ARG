@@ -28,7 +28,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
-
+#include "stdio.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
@@ -61,6 +61,10 @@ void Error_Handler(void);
 #define OnBoardLED_GPIO_Port GPIOC
 #define RainGuagePulseInput_Pin GPIO_PIN_1
 #define RainGuagePulseInput_GPIO_Port GPIOA
+#define SERIAL_Tx_Pin GPIO_PIN_11
+#define SERIAL_Tx_GPIO_Port GPIOA
+#define SERIAL_Rx_Pin GPIO_PIN_12
+#define SERIAL_Rx_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 

@@ -40,6 +40,7 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+UART_HandleTypeDef huart6;
 
 /* USER CODE BEGIN PV */
 
@@ -48,12 +49,23 @@
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
+static void MX_USART6_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+uint8_t aRxBuffer;
+
+#ifdef __GNUC__
+/* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
+  set to 'Yes') calls __io_putchar() */
+#define PUTCHAR_PROTOTYPE int __io_putchar(int ch)
+#else
+#define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
+#endif /* __GNUC__ */
+
 
 /* USER CODE END 0 */
 
@@ -86,7 +98,9 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_USART6_UART_Init();
   /* USER CODE BEGIN 2 */
+  HAL_UART_Receive_IT(&huart6, (uint8_t *) &aRxBuffer, 1);
 
   /* USER CODE END 2 */
 
@@ -99,8 +113,9 @@ int main(void)
     /* USER CODE BEGIN 3 */
 //	  if(HAL_GPIO_ReadPin(OnBoardKey_GPIO_Port,OnBoardKey_Pin) == GPIO_PIN_SET)
 //	  {
+	  printf("\n Hello\r\n");
 //		  HAL_GPIO_TogglePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin);
-//		  HAL_Delay(1000);
+		  HAL_Delay(1000);
 //	  }
   }
   /* USER CODE END 3 */
@@ -152,6 +167,39 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief USART6 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART6_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART6_Init 0 */
+
+  /* USER CODE END USART6_Init 0 */
+
+  /* USER CODE BEGIN USART6_Init 1 */
+
+  /* USER CODE END USART6_Init 1 */
+  huart6.Instance = USART6;
+  huart6.Init.BaudRate = 115200;
+  huart6.Init.WordLength = UART_WORDLENGTH_8B;
+  huart6.Init.StopBits = UART_STOPBITS_1;
+  huart6.Init.Parity = UART_PARITY_NONE;
+  huart6.Init.Mode = UART_MODE_TX_RX;
+  huart6.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart6.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART6_Init 2 */
+
+  /* USER CODE END USART6_Init 2 */
+
+}
+
+/**
   * @brief GPIO Initialization Function
   * @param None
   * @retval None
@@ -180,7 +228,7 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin : RainGuagePulseInput_Pin */
   GPIO_InitStruct.Pin = RainGuagePulseInput_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
-  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(RainGuagePulseInput_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
@@ -190,6 +238,32 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+uint8_t SerialTxReady = RESET;
+
+/**
+   @brief  Rx reception completed callback
+   @param  UartHandle: UART handle.
+   @note   This callback executes once defined bytes of reception completed
+   @retval None
+*/
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+  if (UartHandle->Instance == USART6)
+  {
+	    HAL_UART_Receive_IT(&huart6, (uint8_t *) &aRxBuffer, 1);
+	    printf("%c", aRxBuffer);
+  }
+}
+
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
+{
+  if (UartHandle->Instance == USART6)
+  {
+    /* Set transmission flag: transfer complete */
+	  SerialTxReady = SET;
+  }
+}
 
 /**
    @brief EXTI line detection callbacks
@@ -208,19 +282,19 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
     }
   }
 }
-//
-///**
-//   @brief  Retargets the C library APP_DEBUG_STR function to the USART.
-//   @param  None
-//   @retval None
-//*/
-//PUTCHAR_PROTOTYPE
-//{
-//  /* Place your implementation of fputc here */
-//  /* e.g. write a character to the EVAL_COM1 and Loop until the end of transmission */
-//  HAL_UART_Transmit(&huart1, (uint8_t *) &ch, 1, 0XFFFF);
-//  return ch;
-//}
+
+/**
+   @brief  Retargets the C library APP_DEBUG_STR function to the USART.
+   @param  None
+   @retval None
+*/
+PUTCHAR_PROTOTYPE
+{
+  /* Place your implementation of fputc here */
+  /* e.g. write a character to the EVAL_COM1 and Loop until the end of transmission */
+  HAL_UART_Transmit(&huart6, (uint8_t *) &ch, 1, 0XFFFF);
+  return ch;
+}
 
 /* USER CODE END 4 */
 
