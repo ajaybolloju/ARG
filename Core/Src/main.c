@@ -40,7 +40,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
-UART_HandleTypeDef huart6;
+UART_HandleTypeDef huart1;
+UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
 
@@ -49,7 +50,8 @@ UART_HandleTypeDef huart6;
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
-static void MX_USART6_UART_Init(void);
+static void MX_USART1_UART_Init(void);
+static void MX_USART2_UART_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -57,6 +59,10 @@ static void MX_USART6_UART_Init(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 uint8_t aRxBuffer;
+uint8_t SerialTxReady = RESET;
+uint8_t ModemTxReady = SET;
+uint8_t g_buff[100] = {0};
+uint8_t wr_ptr = 0;
 
 #ifdef __GNUC__
 /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
@@ -98,9 +104,11 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USART6_UART_Init();
+  MX_USART1_UART_Init();
+  MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
-  HAL_UART_Receive_IT(&huart6, (uint8_t *) &aRxBuffer, 1);
+  HAL_UART_Receive_IT(&huart1, (uint8_t *) &aRxBuffer, 1);
+  HAL_UART_Receive_IT(&huart2, (uint8_t *) &aRxBuffer, 1);
 
   /* USER CODE END 2 */
 
@@ -113,9 +121,26 @@ int main(void)
     /* USER CODE BEGIN 3 */
 //	  if(HAL_GPIO_ReadPin(OnBoardKey_GPIO_Port,OnBoardKey_Pin) == GPIO_PIN_SET)
 //	  {
-	  printf("\n Hello\r\n");
-//		  HAL_GPIO_TogglePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin);
-		  HAL_Delay(1000);
+	  if(ModemTxReady == SET)
+	  {
+		  memset(g_buff,'\0',sizeof(g_buff));
+		  wr_ptr = 0;
+
+		  if (HAL_UART_Transmit_IT(&huart1, (uint8_t *) "AT\r\n",
+								   strlen((char *) "AT\r\n")) != HAL_OK)
+		  {
+			  printf("\n Txn Failed");
+		  }
+	//		  HAL_GPIO_TogglePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin);
+		  HAL_Delay(2000);
+
+		  if (strstr((char *) g_buff, "OK"))
+		  {
+			  printf("\n Response OK: %s",(char *)g_buff);
+		  }
+	  }
+	  HAL_Delay(5000);
+	  ModemTxReady = RESET;
 //	  }
   }
   /* USER CODE END 3 */
@@ -167,35 +192,68 @@ void SystemClock_Config(void)
 }
 
 /**
-  * @brief USART6 Initialization Function
+  * @brief USART1 Initialization Function
   * @param None
   * @retval None
   */
-static void MX_USART6_UART_Init(void)
+static void MX_USART1_UART_Init(void)
 {
 
-  /* USER CODE BEGIN USART6_Init 0 */
+  /* USER CODE BEGIN USART1_Init 0 */
 
-  /* USER CODE END USART6_Init 0 */
+  /* USER CODE END USART1_Init 0 */
 
-  /* USER CODE BEGIN USART6_Init 1 */
+  /* USER CODE BEGIN USART1_Init 1 */
 
-  /* USER CODE END USART6_Init 1 */
-  huart6.Instance = USART6;
-  huart6.Init.BaudRate = 115200;
-  huart6.Init.WordLength = UART_WORDLENGTH_8B;
-  huart6.Init.StopBits = UART_STOPBITS_1;
-  huart6.Init.Parity = UART_PARITY_NONE;
-  huart6.Init.Mode = UART_MODE_TX_RX;
-  huart6.Init.HwFlowCtl = UART_HWCONTROL_NONE;
-  huart6.Init.OverSampling = UART_OVERSAMPLING_16;
-  if (HAL_UART_Init(&huart6) != HAL_OK)
+  /* USER CODE END USART1_Init 1 */
+  huart1.Instance = USART1;
+  huart1.Init.BaudRate = 115200;
+  huart1.Init.WordLength = UART_WORDLENGTH_8B;
+  huart1.Init.StopBits = UART_STOPBITS_1;
+  huart1.Init.Parity = UART_PARITY_NONE;
+  huart1.Init.Mode = UART_MODE_TX_RX;
+  huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart1.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart1) != HAL_OK)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN USART6_Init 2 */
+  /* USER CODE BEGIN USART1_Init 2 */
 
-  /* USER CODE END USART6_Init 2 */
+  /* USER CODE END USART1_Init 2 */
+
+}
+
+/**
+  * @brief USART2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART2_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART2_Init 0 */
+
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 9600;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
 
 }
 
@@ -239,8 +297,6 @@ static void MX_GPIO_Init(void)
 
 /* USER CODE BEGIN 4 */
 
-uint8_t SerialTxReady = RESET;
-
 /**
    @brief  Rx reception completed callback
    @param  UartHandle: UART handle.
@@ -249,20 +305,31 @@ uint8_t SerialTxReady = RESET;
 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
-  if (UartHandle->Instance == USART6)
-  {
-	    HAL_UART_Receive_IT(&huart6, (uint8_t *) &aRxBuffer, 1);
-	    printf("%c", aRxBuffer);
-  }
+	  if (UartHandle->Instance == USART1)
+	  {
+		    HAL_UART_Receive_IT(&huart1, (uint8_t *) &aRxBuffer, 1);
+		    g_buff[wr_ptr++] = aRxBuffer;
+		    printf("\n R: %c", aRxBuffer);
+	  }
+//	  if (UartHandle->Instance == USART2)
+//	  {
+//		    HAL_UART_Receive_IT(&huart2, (uint8_t *) &aRxBuffer, 1);
+//		    printf("%c", aRxBuffer);
+//	  }
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
-  if (UartHandle->Instance == USART6)
-  {
-    /* Set transmission flag: transfer complete */
-	  SerialTxReady = SET;
-  }
+	  if (UartHandle->Instance == USART1)
+	  {
+	    /* Set transmission flag: transfer complete */
+		  ModemTxReady = SET;
+	  }
+	  if (UartHandle->Instance == USART2)
+	  {
+	    /* Set transmission flag: transfer complete */
+		  SerialTxReady = SET;
+	  }
 }
 
 /**
@@ -292,7 +359,7 @@ PUTCHAR_PROTOTYPE
 {
   /* Place your implementation of fputc here */
   /* e.g. write a character to the EVAL_COM1 and Loop until the end of transmission */
-  HAL_UART_Transmit(&huart6, (uint8_t *) &ch, 1, 0XFFFF);
+  HAL_UART_Transmit(&huart2, (uint8_t *) &ch, 1, 0XFFFF);
   return ch;
 }
 
