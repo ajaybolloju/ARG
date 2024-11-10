@@ -97,11 +97,11 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-	  if(HAL_GPIO_ReadPin(OnBoardKey_GPIO_Port,OnBoardKey_Pin) == GPIO_PIN_SET)
-	  {
-		  HAL_GPIO_TogglePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin);
-		  HAL_Delay(1000);
-	  }
+//	  if(HAL_GPIO_ReadPin(OnBoardKey_GPIO_Port,OnBoardKey_Pin) == GPIO_PIN_SET)
+//	  {
+//		  HAL_GPIO_TogglePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin);
+//		  HAL_Delay(1000);
+//	  }
   }
   /* USER CODE END 3 */
 }
@@ -177,17 +177,50 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(OnBoardLED_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : OnBoardKey_Pin */
-  GPIO_InitStruct.Pin = OnBoardKey_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  HAL_GPIO_Init(OnBoardKey_GPIO_Port, &GPIO_InitStruct);
+  /*Configure GPIO pin : RainGuagePulseInput_Pin */
+  GPIO_InitStruct.Pin = RainGuagePulseInput_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  HAL_GPIO_Init(RainGuagePulseInput_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
+  HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI1_IRQn);
 /* USER CODE END MX_GPIO_Init_2 */
 }
 
 /* USER CODE BEGIN 4 */
+
+/**
+   @brief EXTI line detection callbacks
+   @param GPIO_Pin: Specifies the pins connected EXTI line
+   @retval None
+*/
+void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
+{
+
+  if (GPIO_Pin == RainGuagePulseInput_Pin)
+  {
+    if (HAL_GPIO_ReadPin(RainGuagePulseInput_GPIO_Port, RainGuagePulseInput_Pin)
+         == GPIO_PIN_SET)
+    {
+    	HAL_GPIO_TogglePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin);
+    }
+  }
+}
+//
+///**
+//   @brief  Retargets the C library APP_DEBUG_STR function to the USART.
+//   @param  None
+//   @retval None
+//*/
+//PUTCHAR_PROTOTYPE
+//{
+//  /* Place your implementation of fputc here */
+//  /* e.g. write a character to the EVAL_COM1 and Loop until the end of transmission */
+//  HAL_UART_Transmit(&huart1, (uint8_t *) &ch, 1, 0XFFFF);
+//  return ch;
+//}
 
 /* USER CODE END 4 */
 

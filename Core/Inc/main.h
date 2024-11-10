@@ -59,8 +59,8 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define OnBoardLED_Pin GPIO_PIN_13
 #define OnBoardLED_GPIO_Port GPIOC
-#define OnBoardKey_Pin GPIO_PIN_0
-#define OnBoardKey_GPIO_Port GPIOA
+#define RainGuagePulseInput_Pin GPIO_PIN_1
+#define RainGuagePulseInput_GPIO_Port GPIOA
 
 /* USER CODE BEGIN Private defines */
 
