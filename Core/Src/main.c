@@ -119,29 +119,43 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
-//	  if(HAL_GPIO_ReadPin(OnBoardKey_GPIO_Port,OnBoardKey_Pin) == GPIO_PIN_SET)
+	  // Send AT command
+//	      char *command = "AT\r\n";
+
+//	      printf("AT\r\n");
+//	      HAL_UART_Transmit(&huart1, (uint8_t*)command, strlen(command), HAL_MAX_DELAY);
+
+//	      HAL_Delay(2000);
+	      // Wait for and print response
+//	      uint8_t response[100];
+//	      if (HAL_UART_Receive(&huart1, response, sizeof(response), 1000) == HAL_OK) {
+//	          // Process or print the response here
+//	    	  printf("\n Response Rxd %s",(char *)response);
+//	      }
+//
+//	      HAL_Delay(1000); // Wait before sending the next command
+////	  if(HAL_GPIO_ReadPin(OnBoardKey_GPIO_Port,OnBoardKey_Pin) == GPIO_PIN_SET)
+////	  {
+////	  if(ModemTxReady == SET)
 //	  {
-	  if(ModemTxReady == SET)
-	  {
 		  memset(g_buff,'\0',sizeof(g_buff));
 		  wr_ptr = 0;
-
-		  if (HAL_UART_Transmit_IT(&huart1, (uint8_t *) "AT\r\n",
-								   strlen((char *) "AT\r\n")) != HAL_OK)
+//
+		  if (HAL_UART_Transmit(&huart2, (uint8_t *) "AT+CGMM\r\n",strlen("AT+CGMM\r\n"),HAL_MAX_DELAY) != HAL_OK)
 		  {
 			  printf("\n Txn Failed");
 		  }
-	//		  HAL_GPIO_TogglePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin);
-		  HAL_Delay(2000);
-
+		  HAL_Delay(5000);
+//
 		  if (strstr((char *) g_buff, "OK"))
 		  {
 			  printf("\n Response OK: %s",(char *)g_buff);
 		  }
-	  }
-	  HAL_Delay(5000);
-	  ModemTxReady = RESET;
 //	  }
+//	  HAL_Delay(5000);
+//	  ModemTxReady = RESET;
+//	  }
+			//		  HAL_GPIO_TogglePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin);
   }
   /* USER CODE END 3 */
 }
@@ -240,7 +254,7 @@ static void MX_USART2_UART_Init(void)
 
   /* USER CODE END USART2_Init 1 */
   huart2.Instance = USART2;
-  huart2.Init.BaudRate = 9600;
+  huart2.Init.BaudRate = 115200;
   huart2.Init.WordLength = UART_WORDLENGTH_8B;
   huart2.Init.StopBits = UART_STOPBITS_1;
   huart2.Init.Parity = UART_PARITY_NONE;
@@ -305,17 +319,16 @@ static void MX_GPIO_Init(void)
 */
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *UartHandle)
 {
-	  if (UartHandle->Instance == USART1)
-	  {
-		    HAL_UART_Receive_IT(&huart1, (uint8_t *) &aRxBuffer, 1);
-		    g_buff[wr_ptr++] = aRxBuffer;
-		    printf("\n R: %c", aRxBuffer);
-	  }
-//	  if (UartHandle->Instance == USART2)
+//	  if (UartHandle->Instance == USART1)
 //	  {
-//		    HAL_UART_Receive_IT(&huart2, (uint8_t *) &aRxBuffer, 1);
-//		    printf("%c", aRxBuffer);
+////		    HAL_UART_Receive_IT(&huart1, (uint8_t *) &aRxBuffer, 1);
 //	  }
+	  if (UartHandle->Instance == USART2)
+	  {
+		    HAL_UART_Receive_IT(&huart2, (uint8_t *) &aRxBuffer, 1);
+		    g_buff[wr_ptr++] = aRxBuffer;
+//		    printf("%c", aRxBuffer);
+	  }
 }
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
@@ -323,12 +336,12 @@ void HAL_UART_TxCpltCallback(UART_HandleTypeDef *UartHandle)
 	  if (UartHandle->Instance == USART1)
 	  {
 	    /* Set transmission flag: transfer complete */
-		  ModemTxReady = SET;
+		  SerialTxReady = SET;
 	  }
 	  if (UartHandle->Instance == USART2)
 	  {
 	    /* Set transmission flag: transfer complete */
-		  SerialTxReady = SET;
+		  ModemTxReady = SET;
 	  }
 }
 
@@ -359,7 +372,7 @@ PUTCHAR_PROTOTYPE
 {
   /* Place your implementation of fputc here */
   /* e.g. write a character to the EVAL_COM1 and Loop until the end of transmission */
-  HAL_UART_Transmit(&huart2, (uint8_t *) &ch, 1, 0XFFFF);
+  HAL_UART_Transmit(&huart1, (uint8_t *) &ch, 1, 0XFFFF);
   return ch;
 }
 
