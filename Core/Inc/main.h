@@ -33,6 +33,7 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 #include "stdio.h"
 #include "string.h"
+#include "SPI_FLASH.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
@@ -66,6 +67,8 @@ void Error_Handler(void);
 #define SERIAL_Tx_GPIO_Port GPIOA
 #define SERIAL_Rx_Pin GPIO_PIN_3
 #define SERIAL_Rx_GPIO_Port GPIOA
+#define SPI1_CS_Pin GPIO_PIN_4
+#define SPI1_CS_GPIO_Port GPIOA
 #define MODEM_Tx_Pin GPIO_PIN_9
 #define MODEM_Tx_GPIO_Port GPIOA
 #define MODEM_Rx_Pin GPIO_PIN_10

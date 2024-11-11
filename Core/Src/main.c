@@ -40,6 +40,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+SPI_HandleTypeDef hspi1;
+
 UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
@@ -52,6 +54,7 @@ void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
+static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -72,6 +75,8 @@ uint8_t wr_ptr = 0;
 #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
 #endif /* __GNUC__ */
 
+#define ONBOARD_LED_OFF()  HAL_GPIO_WritePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin, GPIO_PIN_RESET)
+#define ONBOARD_LED_ON() HAL_GPIO_WritePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin, GPIO_PIN_SET)
 
 /* USER CODE END 0 */
 
@@ -106,9 +111,43 @@ int main(void)
   MX_GPIO_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
   HAL_UART_Receive_IT(&huart1, (uint8_t *) &aRxBuffer, 1);
   HAL_UART_Receive_IT(&huart2, (uint8_t *) &aRxBuffer, 1);
+
+  // Test data to write to flash
+      uint8_t write_data[16] = "Hello, W25QXX!";
+      uint8_t read_data[16] = {0};
+      ONBOARD_LED_OFF();
+
+      // Write data to address 0x000000
+      printf("\n SPI FLASH DATA WRITE STARTED");
+      W25QXX_WriteData(0x000000, write_data, sizeof(write_data));
+      printf("\n SPI FLASH DATA WRITE COMPLETED");
+
+      // Read data back from address 0x000000
+      printf("\n SPI FLASH DATA READ STARTED");
+      W25QXX_ReadData(0x000000, read_data, sizeof(read_data));
+      printf("\n SPI FLASH DATA READ COMPLETED");
+
+      // Compare read data with write data
+      if (memcmp(write_data, read_data, sizeof(write_data)) == 0) {
+          // Success! Data matches
+          ONBOARD_LED_ON();
+          printf("\n SPI FLASH READ DATA SUCCESS: \t");
+          for(uint8_t i = 0; i < 16;i++)
+          {
+              printf("%c", read_data[i]);
+          }
+//          HAL_GPIO_WritePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin, GPIO_PIN_SET); // Turn on an LED or indicate success
+      } else {
+          // Failure! Data mismatch
+          printf("\n SPI FLASH READ DATA FAILED");
+          ONBOARD_LED_OFF();
+//          HAL_GPIO_WritePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin, GPIO_PIN_RESET); // Turn on a different LED or indicate failure
+      }
+
 
   /* USER CODE END 2 */
 
@@ -116,6 +155,11 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+      printf("\n SPI FLASH READ DATA SUCCESS: \t");
+      for(uint8_t i = 0; i < 16;i++)
+      {
+          printf("%c", read_data[i]);
+      }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -206,6 +250,44 @@ void SystemClock_Config(void)
 }
 
 /**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI1_Init(void)
+{
+
+  /* USER CODE BEGIN SPI1_Init 0 */
+
+  /* USER CODE END SPI1_Init 0 */
+
+  /* USER CODE BEGIN SPI1_Init 1 */
+
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_32;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI1_Init 2 */
+
+  /* USER CODE END SPI1_Init 2 */
+
+}
+
+/**
   * @brief USART1 Initialization Function
   * @param None
   * @retval None
@@ -290,6 +372,9 @@ static void MX_GPIO_Init(void)
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin, GPIO_PIN_RESET);
 
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(SPI1_CS_GPIO_Port, SPI1_CS_Pin, GPIO_PIN_SET);
+
   /*Configure GPIO pin : OnBoardLED_Pin */
   GPIO_InitStruct.Pin = OnBoardLED_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
@@ -302,6 +387,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(RainGuagePulseInput_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : SPI1_CS_Pin */
+  GPIO_InitStruct.Pin = SPI1_CS_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
+  HAL_GPIO_Init(SPI1_CS_GPIO_Port, &GPIO_InitStruct);
 
 /* USER CODE BEGIN MX_GPIO_Init_2 */
   HAL_NVIC_SetPriority(EXTI1_IRQn, 0, 0);

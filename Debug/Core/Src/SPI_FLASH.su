@@ -1,0 +1,4 @@
+../Core/Src/SPI_FLASH.c:9:6:W25QXX_WriteEnable	16	static
+../Core/Src/SPI_FLASH.c:18:9:W25QXX_ReadStatus	16	static
+../Core/Src/SPI_FLASH.c:30:6:W25QXX_WriteData	32	static
+../Core/Src/SPI_FLASH.c:45:6:W25QXX_ReadData	32	static
