@@ -18,6 +18,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "fatfs.h"
 #include "usb_host.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -47,6 +48,14 @@ UART_HandleTypeDef huart1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
+//extern uint8_t retUSBH;    /* Return value for USBH */
+//extern char USBHPath[4];   /* USBH logical drive path */
+//extern FATFS USBHFatFS;    /* File system object for USBH logical drive */
+//extern FIL USBHFile;       /* File object for USBH */
+FRESULT RES;
+uint32_t BytesWritten = 0;
+int Dir_Flag;
+char hold[100] = {0};
 
 /* USER CODE END PV */
 
@@ -69,6 +78,7 @@ uint8_t SerialTxReady = RESET;
 uint8_t ModemTxReady = SET;
 uint8_t g_buff[100] = {0};
 uint8_t wr_ptr = 0;
+uint8_t usb_exp_disk = 1;
 
 #ifdef __GNUC__
 /* With GCC/RAISONANCE, small printf (option LD Linker->Libraries->Small printf
@@ -116,7 +126,14 @@ int main(void)
   MX_USART2_UART_Init();
   MX_SPI1_Init();
   MX_USB_HOST_Init();
+  MX_FATFS_Init();
   /* USER CODE BEGIN 2 */
+
+  if (f_mount(&USBHFatFS, (TCHAR const*) USBHPath, 0) != FR_OK)
+  {
+    printf("\n\n ERROR : USBHFatFS Initialization");
+  }
+
   HAL_UART_Receive_IT(&huart1, (uint8_t *) &aRxBuffer, 1);
   HAL_UART_Receive_IT(&huart2, (uint8_t *) &aRxBuffer, 1);
 
@@ -135,22 +152,22 @@ int main(void)
       W25QXX_ReadData(0x000000, read_data, sizeof(read_data));
       printf("\n SPI FLASH DATA READ COMPLETED");
 
-      // Compare read data with write data
-      if (memcmp(write_data, read_data, sizeof(write_data)) == 0) {
-          // Success! Data matches
-          ONBOARD_LED_ON();
-          printf("\n SPI FLASH READ DATA SUCCESS: \t");
-          for(uint8_t i = 0; i < 16;i++)
-          {
-              printf("%c", read_data[i]);
-          }
-//          HAL_GPIO_WritePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin, GPIO_PIN_SET); // Turn on an LED or indicate success
-      } else {
-          // Failure! Data mismatch
-          printf("\n SPI FLASH READ DATA FAILED");
-          ONBOARD_LED_OFF();
-//          HAL_GPIO_WritePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin, GPIO_PIN_RESET); // Turn on a different LED or indicate failure
-      }
+//      // Compare read data with write data
+//      if (memcmp(write_data, read_data, sizeof(write_data)) == 0) {
+//          // Success! Data matches
+//          ONBOARD_LED_ON();
+//          printf("\n SPI FLASH READ DATA SUCCESS: \t");
+//          for(uint8_t i = 0; i < 16;i++)
+//          {
+//              printf("%c", read_data[i]);
+//          }
+////          HAL_GPIO_WritePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin, GPIO_PIN_SET); // Turn on an LED or indicate success
+//      } else {
+//          // Failure! Data mismatch
+//          printf("\n SPI FLASH READ DATA FAILED");
+//          ONBOARD_LED_OFF();
+////          HAL_GPIO_WritePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin, GPIO_PIN_RESET); // Turn on a different LED or indicate failure
+//      }
 
 
   /* USER CODE END 2 */
@@ -159,15 +176,23 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-      printf("\n SPI FLASH READ DATA SUCCESS: \t");
-      for(uint8_t i = 0; i < 16;i++)
-      {
-          printf("%c", read_data[i]);
-      }
+//      printf("\n SPI FLASH READ DATA SUCCESS: \t");
+//      for(uint8_t i = 0; i < 16;i++)
+//      {
+//          printf("%c", read_data[i]);
+//      }
     /* USER CODE END WHILE */
     MX_USB_HOST_Process();
 
     /* USER CODE BEGIN 3 */
+
+    if ((MX_USB_HOST_App_state() == APPLICATION_READY) && usb_exp_disk)
+    {
+      usb_exp_disk = 0;
+      printf("\n USB DETECTED");
+//      printf("\n usb  =  %d", Explore_Disk(USBHPath, 1));
+    }
+
 	  // Send AT command
 //	      char *command = "AT\r\n";
 
@@ -187,19 +212,19 @@ int main(void)
 ////	  {
 ////	  if(ModemTxReady == SET)
 //	  {
-		  memset(g_buff,'\0',sizeof(g_buff));
-		  wr_ptr = 0;
-//
-		  if (HAL_UART_Transmit(&huart2, (uint8_t *) "AT+CGMM\r\n",strlen("AT+CGMM\r\n"),HAL_MAX_DELAY) != HAL_OK)
-		  {
-			  printf("\n Txn Failed");
-		  }
-		  HAL_Delay(5000);
-//
-		  if (strstr((char *) g_buff, "OK"))
-		  {
-			  printf("\n Response OK: %s",(char *)g_buff);
-		  }
+//		  memset(g_buff,'\0',sizeof(g_buff));
+//		  wr_ptr = 0;
+////
+//		  if (HAL_UART_Transmit(&huart2, (uint8_t *) "AT+CGMM\r\n",strlen("AT+CGMM\r\n"),HAL_MAX_DELAY) != HAL_OK)
+//		  {
+//			  printf("\n Txn Failed");
+//		  }
+//		  HAL_Delay(5000);
+////
+//		  if (strstr((char *) g_buff, "OK"))
+//		  {
+//			  printf("\n Response OK: %s",(char *)g_buff);
+//		  }
 //	  }
 //	  HAL_Delay(5000);
 //	  ModemTxReady = RESET;

@@ -32,6 +32,7 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE END PV */
+extern uint8_t usb_exp_disk;
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -46,6 +47,10 @@ ApplicationTypeDef Appli_state = APPLICATION_IDLE;
  * -- Insert your variables declaration here --
  */
 /* USER CODE BEGIN 0 */
+uint8_t MX_USB_HOST_App_state(void)
+{
+  return Appli_state;
+}
 
 /* USER CODE END 0 */
 
@@ -106,17 +111,22 @@ static void USBH_UserProcess  (USBH_HandleTypeDef *phost, uint8_t id)
   switch(id)
   {
   case HOST_USER_SELECT_CONFIGURATION:
+	  printf("\n USB Config");
   break;
 
   case HOST_USER_DISCONNECTION:
-  Appli_state = APPLICATION_DISCONNECT;
+	  printf("\n USB Disconnected");
+	  usb_exp_disk = 1;
+	  Appli_state = APPLICATION_DISCONNECT;
   break;
 
   case HOST_USER_CLASS_ACTIVE:
+	  printf("\n USB READY");
   Appli_state = APPLICATION_READY;
   break;
 
   case HOST_USER_CONNECTION:
+	  printf("\n USB Connected");
   Appli_state = APPLICATION_START;
   break;
 

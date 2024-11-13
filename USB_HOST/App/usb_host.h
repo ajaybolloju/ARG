@@ -31,6 +31,7 @@
 #include "stm32f4xx_hal.h"
 
 /* USER CODE BEGIN INCLUDE */
+ uint8_t MX_USB_HOST_App_state(void);
 
 /* USER CODE END INCLUDE */
 
