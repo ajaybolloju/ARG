@@ -31,7 +31,10 @@
 #include "stm32f4xx_hal.h"
 
 /* USER CODE BEGIN INCLUDE */
+//#include "main.h"
+
  uint8_t MX_USB_HOST_App_state(void);
+ //FRESULT Explore_Disk(char *path, uint8_t recu_level);
 
 /* USER CODE END INCLUDE */
 

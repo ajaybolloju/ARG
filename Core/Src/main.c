@@ -169,7 +169,11 @@ int main(void)
 ////          HAL_GPIO_WritePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin, GPIO_PIN_RESET); // Turn on a different LED or indicate failure
 //      }
 
-
+      FATFS USBFatFS;     // File system object for USB
+      FIL MyFile;
+      char buffer[100];   // Buffer to hold read data
+      FRESULT res;    // FATFS function common result variable
+      UINT bytesWritten, bytesRead;
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -191,8 +195,47 @@ int main(void)
       usb_exp_disk = 0;
       printf("\n USB DETECTED");
 //      printf("\n usb  =  %d", Explore_Disk(USBHPath, 1));
-    }
 
+      res = f_mount(&USBFatFS, "", 1);
+          if (res != FR_OK) {
+              printf("Failed to mount USB drive. Error: %d\n", res);
+          }
+          printf("USB Drive mounted successfully.\n");
+
+          // 4. Create and Write to a File on USB
+              res = f_open(&MyFile, "test.txt", FA_CREATE_ALWAYS | FA_WRITE);
+              if (res == FR_OK) {
+                  const char *data = "Hello, USB World!";
+                  res = f_write(&MyFile, data, strlen(data), &bytesWritten);
+                  if (res == FR_OK && bytesWritten == strlen(data)) {
+                      printf("Data written successfully to USB.\n");
+                  } else {
+                      printf("Failed to write data to USB. Error: %d\n", res);
+                  }
+                  f_close(&MyFile);  // Close file after writing
+              } else {
+                  printf("Failed to open file for writing. Error: %d\n", res);
+              }
+
+              // 5. Read the Data Back from the File
+              res = f_open(&MyFile, "test.txt", FA_READ);
+              if (res == FR_OK) {
+                  res = f_read(&MyFile, buffer, sizeof(buffer) - 1, &bytesRead);
+                  if (res == FR_OK) {
+                      buffer[bytesRead] = '\0';  // Null-terminate the read data
+                      printf("Data read from USB: %s\n", buffer);
+                  } else {
+                      printf("Failed to read data from USB. Error: %d\n", res);
+                  }
+                  f_close(&MyFile);  // Close file after reading
+              } else {
+                  printf("Failed to open file for reading. Error: %d\n", res);
+              }
+
+              // 6. Unmount the USB Drive after Operations
+              f_mount(NULL, "", 1);
+              printf("USB Drive unmounted.\n");
+   }
 	  // Send AT command
 //	      char *command = "AT\r\n";
 

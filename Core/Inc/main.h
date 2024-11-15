@@ -34,6 +34,8 @@ extern "C" {
 #include "stdio.h"
 #include "string.h"
 #include "SPI_FLASH.h"
+//#include "ff.h"
+//#include "fatfs.h"
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/
