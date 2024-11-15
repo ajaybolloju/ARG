@@ -23,7 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "DS3231.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -42,6 +42,8 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+I2C_HandleTypeDef hi2c1;
+
 SPI_HandleTypeDef hspi1;
 
 UART_HandleTypeDef huart1;
@@ -65,6 +67,7 @@ static void MX_GPIO_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_USART2_UART_Init(void);
 static void MX_SPI1_Init(void);
+static void MX_I2C1_Init(void);
 void MX_USB_HOST_Process(void);
 
 /* USER CODE BEGIN PFP */
@@ -127,6 +130,7 @@ int main(void)
   MX_SPI1_Init();
   MX_USB_HOST_Init();
   MX_FATFS_Init();
+  MX_I2C1_Init();
   /* USER CODE BEGIN 2 */
 
   if (f_mount(&USBHFatFS, (TCHAR const*) USBHPath, 0) != FR_OK)
@@ -137,6 +141,8 @@ int main(void)
   HAL_UART_Receive_IT(&huart1, (uint8_t *) &aRxBuffer, 1);
   HAL_UART_Receive_IT(&huart2, (uint8_t *) &aRxBuffer, 1);
 
+
+#if SPI_FLASH
   // Test data to write to flash
       uint8_t write_data[16] = "Hello, W25QXX!";
       uint8_t read_data[16] = {0};
@@ -168,27 +174,44 @@ int main(void)
 //          ONBOARD_LED_OFF();
 ////          HAL_GPIO_WritePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin, GPIO_PIN_RESET); // Turn on a different LED or indicate failure
 //      }
+#endif
 
+#if USB_DEVICE
       FATFS USBFatFS;     // File system object for USB
       FIL MyFile;
       char buffer[100];   // Buffer to hold read data
       FRESULT res;    // FATFS function common result variable
       UINT bytesWritten, bytesRead;
+#endif
+      DS3231_Init();
+
+      DS3231_SetTime(23, 44, 0);  // Set time to 14:30:00
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
+      uint8_t hours, minutes, seconds;
+ while (1)
   {
+#if SPI_FLASH
 //      printf("\n SPI FLASH READ DATA SUCCESS: \t");
 //      for(uint8_t i = 0; i < 16;i++)
 //      {
 //          printf("%c", read_data[i]);
 //      }
+#endif
+
+      DS3231_ReadTime(&hours, &minutes, &seconds);
+
+      printf("Time: %02d:%02d:%02d\n", hours, minutes, seconds);
+      HAL_Delay(1000);
+
     /* USER CODE END WHILE */
     MX_USB_HOST_Process();
 
     /* USER CODE BEGIN 3 */
+#if USB_DEVICE
 
     if ((MX_USB_HOST_App_state() == APPLICATION_READY) && usb_exp_disk)
     {
@@ -236,7 +259,11 @@ int main(void)
               f_mount(NULL, "", 1);
               printf("USB Drive unmounted.\n");
    }
-	  // Send AT command
+#endif
+
+
+#if MODEM
+    // Send AT command
 //	      char *command = "AT\r\n";
 
 //	      printf("AT\r\n");
@@ -273,6 +300,7 @@ int main(void)
 //	  ModemTxReady = RESET;
 //	  }
 			//		  HAL_GPIO_TogglePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin);
+#endif
   }
   /* USER CODE END 3 */
 }
@@ -320,6 +348,40 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief I2C1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_I2C1_Init(void)
+{
+
+  /* USER CODE BEGIN I2C1_Init 0 */
+
+  /* USER CODE END I2C1_Init 0 */
+
+  /* USER CODE BEGIN I2C1_Init 1 */
+
+  /* USER CODE END I2C1_Init 1 */
+  hi2c1.Instance = I2C1;
+  hi2c1.Init.ClockSpeed = 100000;
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Init.OwnAddress1 = 0;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+  hi2c1.Init.OwnAddress2 = 0;
+  hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+  hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+  if (HAL_I2C_Init(&hi2c1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN I2C1_Init 2 */
+
+  /* USER CODE END I2C1_Init 2 */
+
 }
 
 /**
@@ -441,6 +503,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOC_CLK_ENABLE();
   __HAL_RCC_GPIOH_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(OnBoardLED_GPIO_Port, OnBoardLED_Pin, GPIO_PIN_RESET);

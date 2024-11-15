@@ -30,9 +30,9 @@
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
+extern uint8_t usb_exp_disk;
 
 /* USER CODE END PV */
-extern uint8_t usb_exp_disk;
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/

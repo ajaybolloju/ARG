@@ -75,6 +75,10 @@ void Error_Handler(void);
 #define MODEM_Tx_GPIO_Port GPIOA
 #define MODEM_Rx_Pin GPIO_PIN_10
 #define MODEM_Rx_GPIO_Port GPIOA
+#define DS3231_SCL_Pin GPIO_PIN_6
+#define DS3231_SCL_GPIO_Port GPIOB
+#define DS3231_SDA_Pin GPIO_PIN_7
+#define DS3231_SDA_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 
